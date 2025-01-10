@@ -36,5 +36,5 @@ func (h *Handler) AddUser(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, gin.H{"created user": true})
 }
