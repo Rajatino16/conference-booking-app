@@ -2,6 +2,8 @@
 
 This project is a simple conference booking system implemented in Go. It allows users to book conferences, manage waitlists, and cancel bookings.
 
+Detailed requirement doc: https://docs.google.com/document/d/1YBVaRB4cnGRJcZYbcrSmeBc55ERlHehpoUnwMxi6D9M/edit?usp=sharing
+
 ---
 
 ## **Features**
