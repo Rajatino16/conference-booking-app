@@ -22,6 +22,7 @@ type Service interface {
 	ConfirmWaitlistBooking(bookingID string) error
 	CancelBooking(bookingID string) error
 	GetBookingStatus(bookingID string) (*BookingStatus, error)
+	StartBookingCleanup(interval time.Duration)
 }
 
 type service struct {
@@ -203,4 +204,45 @@ func (s *service) GetBookingStatus(bookingID string) (*BookingStatus, error) {
 		Status:        booking.Status,
 		WaitlistUntil: booking.WaitlistUntil,
 	}, nil
+}
+
+func (s *service) StartBookingCleanup(interval time.Duration) {
+	go func() {
+		for {
+			time.Sleep(interval) // Wait for the specified interval
+			s.cleanupBookings()
+		}
+	}()
+}
+
+func (s *service) cleanupBookings() {
+	bookings := s.bookingRepo.GetAllBookings()
+
+	for _, booking := range bookings {
+		// Remove expired waitlisted bookings
+		if booking.Status == "Waitlisted" && booking.WaitlistUntil != nil && booking.WaitlistUntil.Before(time.Now().UTC()) {
+			booking.Status = "Canceled"
+			s.bookingRepo.Update(booking)
+			continue
+		}
+
+		// Remove confirmed bookings from overlapping waitlists
+		if booking.Status == "Confirmed" {
+			conf, err := s.confRepo.FindByName(booking.ConferenceID)
+			if err != nil {
+				continue // Skip if conference not found
+			}
+			_ = s.bookingRepo.RemoveOverlappingWaitlists(booking.UserID, conf.StartTime, conf.EndTime)
+		}
+
+		// Handle expired bookings based on conference timing
+		conf, err := s.confRepo.FindByName(booking.ConferenceID)
+		if err != nil {
+			continue // Skip if conference not found
+		}
+		if conf.EndTime.Before(time.Now().UTC()) {
+			booking.Status = "Canceled"
+			s.bookingRepo.Update(booking)
+		}
+	}
 }

@@ -17,6 +17,7 @@ type Repository interface {
 	FindActiveBooking(userID, conferenceID string) (*Booking, error)
 	RemoveOverlappingWaitlists(userID string, start, end time.Time) error
 	HasOverlappingConfirmedBookings(userID string, start, end time.Time) (bool, error)
+	GetAllBookings() []*Booking
 }
 
 type inMemoryRepository struct {
@@ -149,4 +150,15 @@ func (r *inMemoryRepository) HasOverlappingConfirmedBookings(userID string, star
 		}
 	}
 	return false, nil
+}
+
+func (r *inMemoryRepository) GetAllBookings() []*Booking {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	var allBookings []*Booking
+	for _, booking := range r.bookings {
+		allBookings = append(allBookings, booking)
+	}
+	return allBookings
 }

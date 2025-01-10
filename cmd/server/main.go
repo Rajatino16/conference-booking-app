@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"conference-booking/internal/booking"
 	"conference-booking/internal/conference"
@@ -17,6 +18,12 @@ func main() {
 	conferenceStore := conference.NewInMemoryRepository()
 	userStore := user.NewInMemoryRepository()
 	bookingStore := booking.NewInMemoryRepository(conferenceStore)
+
+	// Initialize services
+	bookingService := booking.NewService(conferenceStore, userStore, bookingStore)
+
+	// Start cleanup goroutine (e.g., every 15 minutes)
+	bookingService.StartBookingCleanup(15 * time.Minute)
 
 	// Register routes
 	conference.RegisterRoutes(router, conferenceStore)
