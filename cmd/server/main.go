@@ -16,7 +16,7 @@ func main() {
 	// In-memory storage
 	conferenceStore := conference.NewInMemoryRepository()
 	userStore := user.NewInMemoryRepository()
-	bookingStore := booking.NewInMemoryRepository()
+	bookingStore := booking.NewInMemoryRepository(conferenceStore)
 
 	// Register routes
 	conference.RegisterRoutes(router, conferenceStore)

@@ -8,6 +8,7 @@ import (
 type Repository interface {
 	Create(conference *Conference) error
 	FindByName(name string) (*Conference, error)
+	Update(conference *Conference) error
 }
 
 type inMemoryRepository struct {
@@ -43,4 +44,19 @@ func (r *inMemoryRepository) FindByName(name string) (*Conference, error) {
 	}
 
 	return conference, nil
+}
+
+// Update updates the details of an existing conference.
+// This is primarily used to modify the available slots or other dynamic fields.
+func (r *inMemoryRepository) Update(conference *Conference) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	_, exists := r.conferences[conference.Name]
+	if !exists {
+		return errors.ErrNotFound
+	}
+
+	r.conferences[conference.Name] = conference
+	return nil
 }
